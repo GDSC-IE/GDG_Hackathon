@@ -110,7 +110,7 @@ class game_UI:
         self.music.play_track('menu')
 
         # Defining obstacle parameters internally
-        self.n_of_obstacles = 20
+        self.n_of_obstacles = 25
         self.min_obstacle_size = (50, 50)
         self.max_obstacle_size = (100, 100)
 

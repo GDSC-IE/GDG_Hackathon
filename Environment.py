@@ -11,6 +11,8 @@ from components.world_gen import spawn_objects
 class Env:
     def __init__(self, training=False, use_game_ui=True, world_width=1280, world_height=1280, display_width=640,
                  display_height=640, n_of_obstacles=10):
+        pygame.init()
+
         self.training_mode = training
 
             # ONLY FOR DISPLAY

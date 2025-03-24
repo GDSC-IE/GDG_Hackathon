@@ -1,5 +1,3 @@
-import time
-
 import pygame
 
 from Environment import Env
@@ -20,8 +18,8 @@ def main():
     state_size = 34
 
     # Create the environment.
-    env = Env(training=False,
-              use_game_ui=True,
+    env = Env(training=True,
+              use_game_ui=False,
               world_width=world_width,
               world_height=world_height,
               display_width=display_width,
@@ -48,7 +46,7 @@ def main():
     # Total state size = 2 + 1 + 1 + 8 = 12
 
 
-    bots = [MyBot(), MyBot()]
+    bots = [MyBot(action_size=56), MyBot(action_size=56)]
 
     if load_back:
         for idx, bot in enumerate(bots):
@@ -63,18 +61,19 @@ def main():
     env.set_players_bots_objects(players, bots)
 
     # Training / Game parameters.
-    time_limit = 20  # seconds per episode
+    tick_limit = 1200  # ticks per episode (60 ticks/second * 20 seconds = 1200 ticks)
     num_epochs = 100  # number of episodes
 
     for epoch in range(num_epochs):
         print(f"Starting epoch {epoch + 1}")
         env.reset(randomize_objects=True)
-        start_time = time.time()
+        # Reset the step counter at the beginning of each episode
+        env.steps = 0
 
         while True:
-            # If the time limit for this episode has been reached, break.
-            if time.time() - start_time > time_limit:
-                print("Time limit reached for this episode.")
+            # If the tick limit for this episode has been reached, break.
+            if env.steps > tick_limit:
+                print("Tick limit reached for this episode.")
                 break
 
             # Take a step in the environment.
@@ -96,7 +95,7 @@ def main():
 
             # If the game/episode is over, break out of the loop.
             if finished:
-                print("Episode finished, took {:.3f} seconds.".format(time.time() - start_time))
+                print("Episode finished, took {} ticks.".format(env.steps))
                 break
 
         # Optionally, save the model weights after each epoch.
