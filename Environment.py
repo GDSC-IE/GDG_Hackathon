@@ -11,8 +11,6 @@ from components.world_gen import spawn_objects
 class Env:
     def __init__(self, training=False, use_game_ui=True, world_width=1280, world_height=1280, display_width=640,
                  display_height=640, n_of_obstacles=10):
-        pygame.init()
-
         self.training_mode = training
 
             # ONLY FOR DISPLAY
@@ -178,6 +176,8 @@ class Env:
                     print("Bot would like to do:", actions)
                 if actions["forward"]:
                     player.move_in_direction("forward")
+                    if self.use_advanced_UI:
+                        self.advanced_UI.play_footsteps_sound()
                 if actions["right"]:
                     player.move_in_direction("right")
                 if actions["down"]:
@@ -188,6 +188,8 @@ class Env:
                     player.add_rotate(actions["rotate"])
                 if actions["shoot"]:
                     player.shoot()
+                    if self.use_advanced_UI:
+                        self.advanced_UI.play_shoot_sound()
 
                 if not self.training_mode:
                     # Store position for trail

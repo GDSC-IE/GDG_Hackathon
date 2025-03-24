@@ -1,5 +1,5 @@
 import os
-
+os.environ['SDL_AUDIODRIVER'] = 'coreaudio'
 import pygame
 import random
 import time
@@ -10,11 +10,16 @@ from components.crystal_obstacle import CrystalObstacle
 class GameMusic:
     def __init__(self):
         pygame.mixer.init()
+        pygame.mixer.pre_init(frequency=44100, size=-16, channels=2, buffer=512)
+        pygame.init()
+        pygame.mixer.set_num_channels(16)
 
         self.current_track = None
-        self.volume = 100
+        self.music_volume = 0.7
+        self.shoot_sound_volume = 1.0
+        self.footsteps_volume = 1.2
 
-        # Define music tracks
+        # Background music tracks
         self.tracks = {
             'menu': os.path.join('components', 'music', 'Duran Duran - INVISIBLE.mp3'),
             'battle': os.path.join('components', 'music', 'Duran Duran - INVISIBLE.mp3'),
@@ -22,17 +27,32 @@ class GameMusic:
             'game_over': os.path.join('components', 'music', 'Duran Duran - INVISIBLE.mp3')
         }
 
+        # Load music tracks
         self.loaded_tracks = {}
         for key, filename in self.tracks.items():
             if os.path.exists(filename):
-                try:
-                    pygame.mixer.music.load(filename)
-                    self.loaded_tracks[key] = filename
-                    print(f"Loaded track: {filename}")
-                except Exception as e:
-                    print(f"Warning: Could not load music track {filename}. Error: {e}")
+                self.loaded_tracks[key] = filename
+                print(f"Loaded music track: {filename}")
             else:
-                print(f"Warning: File {filename} does not exist.")
+                print(f"Music file {filename} not found.")
+
+        # Load shooting sound effect
+        shoot_sound_path = os.path.join('components', 'sounds', 'shoot.wav')
+        if os.path.exists(shoot_sound_path):
+            self.shoot_sound = pygame.mixer.Sound(shoot_sound_path)
+            self.shoot_sound.set_volume(self.shoot_sound_volume)
+            print("Shooting sound effect loaded.")
+        else:
+            self.shoot_sound = None
+            print("Shooting sound effect file NOT FOUND!")
+
+        # Footsteps sound effect
+        footsteps_sound_path = os.path.join('components', 'sounds', 'footsteps.wav')
+        if os.path.exists(footsteps_sound_path):
+            self.footsteps_sound = pygame.mixer.Sound(footsteps_sound_path)
+            self.footsteps_sound.set_volume(self.footsteps_volume)
+        else:
+            self.footsteps_sound = None
 
     def play_track(self, track_name, loop=True):
         if track_name not in self.loaded_tracks:
@@ -41,15 +61,23 @@ class GameMusic:
 
         if self.current_track != track_name:
             pygame.mixer.music.load(self.loaded_tracks[track_name])
-            pygame.mixer.music.set_volume(self.volume)
+            pygame.mixer.music.set_volume(self.music_volume)
             pygame.mixer.music.play(-1 if loop else 0)
-            # Add these debug lines
-            print("\nPlayback status:")
-            print("Current volume:", pygame.mixer.music.get_volume())
-            print("Music busy:", pygame.mixer.music.get_busy())
             self.current_track = track_name
             print(f"Now playing: {track_name}")
 
+    def play_shoot_sound(self):
+        if self.shoot_sound:
+            channel = pygame.mixer.find_channel(force=True)
+            if channel:
+                channel.play(self.shoot_sound)
+                print("Shooting sound effect played.")
+
+    def play_footsteps_sound(self):
+        if self.footsteps_sound:
+            channel = pygame.mixer.Channel(5)
+            channel.play(self.footsteps_sound, loops=0, maxtime=500)
+            print("Footsteps sound played.")
 
 class GameTheme:
     def __init__(self):
@@ -88,6 +116,12 @@ class game_UI:
 
         self.obstacles = self.create_obstacles()
         self.background = self.create_background()
+
+    def play_shoot_sound(self):
+        self.music.play_shoot_sound()
+
+    def play_footsteps_sound(self):
+        self.music.play_footsteps_sound()
 
     def create_obstacles(self):
         obstacles = []
